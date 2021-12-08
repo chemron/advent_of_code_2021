@@ -1,6 +1,7 @@
-# https://adventofcode.com/2021/day/03
+# https://adventofcode.com/2021/day/3
+require "matrix"
 
-input = File.open("test_input.txt")
+input = File.open("input.txt")
 
 lines = input.readlines
 
@@ -39,30 +40,82 @@ puts "Power is #{power}"
 # part 2
 
 cols = matrix.transpose
+cols = cols.map {|col| Vector.elements(col)}
 rows = matrix
 
 
-n = n_rows
-good_rows_oxygen = Array.new(n_rows, 1)
-good_rows_co2 = good_rows_oxygen
-for col in cols
 
-    # most common bit
+
+n = n_rows
+
+# rows that satisfy bit criteria (initially all rows do)
+ones_vector = Vector.elements(Array.new(n_rows, 1))
+valid_rows_oxygen = ones_vector
+valid_rows_co2 = ones_vector
+
+
+# sum over the good rows in a single column
+def get_sum(col, good_rows)
     col_sum = 0
     col.each_with_index {|val, i| col_sum += good_rows[i] * val}
-    
-    # current bit
-    if col_sum >= n/2
-        oxygen_bit = 1
-        co2_bit = 0
-    else
-        oxygen_bit = 0
-        co2_bit = 1 
+    return col_sum
+end
+
+
+
+for col in cols
+    # most common bit
+    n = valid_rows_oxygen.sum
+    if n > 1
+        col_sum = get_sum(col, valid_rows_oxygen)
+
+
+        if col_sum >= n/2.0
+            #  this means the good bit is 1, and the good rows are the ones with
+            #  1 in them
+            valid_rows_oxygen = Matrix.diagonal(*valid_rows_oxygen) * col
+
+        else
+            #  this means the good bit is 0, and the good rows are the ones with
+            #  1 in them
+            valid_rows_oxygen = Matrix.diagonal(*valid_rows_oxygen) * (ones_vector - col)
+        end
+
+        # if the good bit is 1, the good rows are the ones with 1 in them
+
     end
 
-    good_rows = col.each_with_index = map {|x| }
+    n = valid_rows_co2.sum
+    if n > 1
+        col_sum = get_sum(col, valid_rows_co2)
 
 
+        if col_sum < n/2.0
+            #  this means the good bit is 1, and the good rows are the ones with
+            #  1 in them
+            valid_rows_co2 = Matrix.diagonal(*valid_rows_co2) * col
 
+        else
+            #  this means the good bit is 0, and the good rows are the ones with
+            #  1 in them
+            valid_rows_co2 = Matrix.diagonal(*valid_rows_co2) * (ones_vector - col)
+        end
+
+        # if the good bit is 1, the good rows are the ones with 1 in them
+
+    end
+end
+
+# index of c02 rating
+co2_i = 0
+o2_i = 0
+valid_rows_co2.each_with_index {|x, i| (x == 1)? co2_i=i : nil}
+valid_rows_oxygen.each_with_index {|x, i| (x == 1)? o2_i=i : nil}
+
+oxygen_rating = arr_to_dec(rows[o2_i])
+
+co2_rating = arr_to_dec(rows[co2_i])
+
+puts oxygen_rating * co2_rating
 
 
