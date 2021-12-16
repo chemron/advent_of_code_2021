@@ -10,11 +10,12 @@ boards = input[1...]
 
 
 class Bingo
-    attr_reader :boards, :board_map, :done
+    attr_reader :boards, :board_map, :done, :score
     # takes a list of board strings
     def initialize(board_strs)
       str_to_boards(board_strs)
       @done = []
+      @score = []
       build_map
     end
 
@@ -48,17 +49,25 @@ class Bingo
         indices = @board_map[num]
         indices.each do |i_b, i_r, i_c|
             @boards[i_b][i_r][i_c] = nil
-            check_if_done(i_b, i_r, i_c)
+            check_if_done(i_b, i_r, i_c, num)
         end
     end
 
     # for given board row and column, check if game is one
-    def check_if_done(i_b, i_r, i_c)
+    def check_if_done(i_b, i_r, i_c, num)
+        # check if board was already done
+        (@done.include? i_b)? return : nil
+
         row = @boards[i_b][i_r]
         col = @boards[i_b].transpose[i_c]
 
-        (row.all?(&:nil?))? @done << i_b : nil
-        (col.all?(&:nil?))? @done << i_b : nil
+        if row.all?(&:nil?) || (col.all?(&:nil?))
+            board = @boards[i_b]
+            board_sum = board.flatten.compact.sum
+            @done << i_b
+            @score << board_sum * num
+        end
+
     end
 
     def to_s
@@ -98,29 +107,19 @@ class Bingo
 end
 
 game = Bingo.new(boards)
-# puts game.done
-# puts game
-# game.next(4)
-# game.next(19)
-# game.next(20)
-# game.next(5)
-# game.next(7)
-# puts game
-# puts game.done
 
+# part 1
+pt_1_done = false
 numbers.each do |num|
     game.next(num)
     puts game
     puts "---"
-    if game.done.length != 0
-        puts "Our winner is board(s) #{game.done.join(", ")}"
-        board = game.boards[*game.done]
-        board_sum = board.flatten.compact.sum
-        puts "board sum is #{board_sum}"
-        score = board_sum * num
-        puts "score is #{score}"
-        break
+    if game.done.length != 0 && !pt_1_done
+        puts "Our winner is board(s) #{game.done.join(", ")} with score(s) #{game.score.join(", ")}"
+        pt_1_done = true
     end
 end
 
+# part 2
+puts "Our loser is board #{game.done[-1]} with score(s) #{game.score[-1]}"
 
