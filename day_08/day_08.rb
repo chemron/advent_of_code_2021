@@ -17,65 +17,52 @@ lines = input.readlines
 
 lines.map! {|line| line.split(" | ")}
 
+
 ones = 0
 fours = 0
 sevens = 0
 eights = 0
 lines.each do |signal, output|
-    # set of possible options
-    a = b = c = d = e = f = g = Set['a', 'b', 'c', 'd', 'e', 'f', 'g']
+
+    # hash table of what segements could correspond to what wires
+    # initially any segment could correspond to a given wire
+    wires_hash = Hash.new(Set[:a, :b, :c, :d, :e, :f, :g])
+    # hash table of what pattern lengths (# lit up segments) correspond to what
+    # letters
+    letter_hash = {
+        2 => [:c, :f], # 1
+        3 => [:a, :c, :f], # 7
+        4 => [:b, :c, :d, :f], # 4
+        5 => [:a, :d, :g], # 2, 3, 5
+        6 => [:a, :b, :f, :g], # 0, 6, 9
+        7 => [:a, :b, :c, :d, :e, :f, :g] # 8
+    }
 
     patterns = signal.split(" ") + output.split(" ")
     patterns.each do |pattern|
-        pattern = pattern.chars.to_set
+        # turn pattern into set of symbols
+        pattern = pattern.chars.map(&:to_sym).to_set
         n = pattern.length
 
-        case n
-        when 2
-            # must be a 1 (c and f)
-            ones += 1
-            c &= pattern
-            f &= pattern
-        when 3
-            # must be a 7 (a, c and f)
-            sevens += 1
-            a &= pattern
-            c &= pattern
-            f &= pattern
-        when 4
-            # must be a 4 (b, c, d and f)
-            fours += 1
-            b &= pattern
-            c &= pattern
-            d &= pattern
-            f &= pattern
-        when 5
-            # must be a 2, 3 or 5 (all use a, d and g)
-            a &= pattern
-            d &= pattern
-            g &= pattern
-        when 6
-            # must be a 0, 6 or 9 (all use a, b, d, f and g)
-            a &= pattern
-            b &= pattern
-            d &= pattern
-            f &= pattern
-            g &= pattern
-        when 7
-            # must be an 8
-            eights += 1
-        else
-            print "Must be an error"
+        letter_hash[n].each do |wire|
+            if wires_hash[wire].length != 1
+                wires_hash[wire] &= pattern
+
+                # if we have found the segment, this segment cannot correspond
+                # to any other wires
+                if wires_hash[wire].length == 1
+                    (:a..:g).each do |key|
+                        if key != wire
+                            wires_hash[key] -= wires_hash[wire]
+                        end
+                    end
+                end
+            end
+
         end
     end
 
-    puts a
-    puts b
-    puts c
-    puts d
-    puts e
-    puts f
-    puts g
+    puts wires_hash
 end
 
 # part one
